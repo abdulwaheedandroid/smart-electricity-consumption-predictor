@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "972035147462",
+    "project_id": "smart-electricity-predictor",
+    "storage_bucket": "smart-electricity-predictor.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:972035147462:android:4006c8a1d8b78f9052f9c7",
+        "android_client_info": {
+          "package_name": "com.abdulwaheed.smartelectricitypredictor"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyAHnErp5Hv0CyHrBbCjQqMAp2tzIP92Lcs"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
