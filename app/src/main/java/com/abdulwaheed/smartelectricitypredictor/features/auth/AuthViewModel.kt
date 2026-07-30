@@ -18,7 +18,7 @@ import android.util.Log
 
 class AuthViewModel : ViewModel() {
     private val authRepository: AuthRepository = ServiceLocator.authRepository
-    // initialize UI state as loading; splash shows progress while check runs
+    // Startup and authentication operations explicitly opt into loading as needed.
     private val _uiState = MutableStateFlow(AuthUiState())
     val uiState = _uiState.asStateFlow()
 
