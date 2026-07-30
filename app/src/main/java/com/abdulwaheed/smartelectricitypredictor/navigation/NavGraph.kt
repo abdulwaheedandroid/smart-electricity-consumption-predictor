@@ -20,7 +20,7 @@ import com.abdulwaheed.smartelectricitypredictor.features.home.ui.HomeScreen
 fun AppNavHost(
     modifier: Modifier = Modifier,
     navController: NavHostController = rememberNavController(),
-    startFirebaseSignIn: () -> Unit = {}
+    startFirebaseSignIn: (((Boolean, Throwable?) -> Unit) -> Unit) = {}
 ) {
     NavHost(navController = navController, startDestination = NavDest.Splash.route, modifier = modifier) {
         composable(NavDest.Splash.route) {
@@ -43,7 +43,8 @@ fun AppNavHost(
             val state by vm.uiState.collectAsStateWithLifecycle()
             // startFirebaseSignIn is forwarded to Activity
             LoginScreen(onLogin = { email, password -> vm.signInWithEmail(email, password) }, onGoogleSignIn = {
-                startFirebaseSignIn()
+                vm.onGoogleSignInStarted()
+                startFirebaseSignIn(vm::handleGoogleSignInResult)
             }, onNavigateToRegister = { navController.navigate(NavDest.Register.route) }, isLoading = state.isLoading, errorMessage = state.errorMessage)
             LaunchedEffect(Unit) {
                 vm.navEvents.collectLatest { route ->

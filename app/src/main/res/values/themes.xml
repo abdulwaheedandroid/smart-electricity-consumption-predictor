@@ -1,5 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
 
-    <style name="Theme.SmartElectricityPredictor" parent="android:Theme.Material.Light.NoActionBar" />
+    <style name="Theme.SmartElectricityPredictor" parent="Theme.AppCompat.DayNight.NoActionBar" />
+
+    <style name="Theme.FirebaseUI" parent="Theme.AppCompat.DayNight.NoActionBar" />
 </resources>

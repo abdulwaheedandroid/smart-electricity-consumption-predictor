@@ -1,20 +1,19 @@
 package com.abdulwaheed.smartelectricitypredictor.features.auth
 
+import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.abdulwaheed.smartelectricitypredictor.di.ServiceLocator
 import com.abdulwaheed.smartelectricitypredictor.domain.repository.AuthRepository
 import com.abdulwaheed.smartelectricitypredictor.features.auth.state.AuthUiState
 import com.abdulwaheed.smartelectricitypredictor.navigation.NavDest
-import com.abdulwaheed.smartelectricitypredictor.di.ServiceLocator
-import com.abdulwaheed.smartelectricitypredictor.util.FirebaseAuthErrorHandler
 import com.abdulwaheed.smartelectricitypredictor.util.AuthValidation
+import com.abdulwaheed.smartelectricitypredictor.util.FirebaseAuthErrorHandler
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
-
-import android.util.Log
 
 class AuthViewModel : ViewModel() {
     private val authRepository: AuthRepository = ServiceLocator.authRepository
@@ -69,6 +68,25 @@ class AuthViewModel : ViewModel() {
                 _uiState.value = AuthUiState(isLoading = false, errorMessage = userFriendlyError)
             })
         }
+    }
+
+    fun onGoogleSignInStarted() {
+        _uiState.value = _uiState.value.copy(isLoading = true, errorMessage = null)
+    }
+
+    fun handleGoogleSignInResult(success: Boolean, error: Throwable?) {
+        if (success) {
+            // FirebaseUI has already updated FirebaseAuth.currentUser.
+            checkAuthAndNavigate()
+            return
+        }
+
+        val message = if (error == null) {
+            "Google sign-in was cancelled."
+        } else {
+            FirebaseAuthErrorHandler.getErrorMessage(error)
+        }
+        _uiState.value = AuthUiState(isLoading = false, errorMessage = message)
     }
 
     fun signUpWithEmail(email: String, password: String) {

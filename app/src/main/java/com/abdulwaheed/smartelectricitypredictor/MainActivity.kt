@@ -7,40 +7,34 @@ import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.activity.result.contract.ActivityResultContracts
-import androidx.activity.viewModels
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
-import com.abdulwaheed.smartelectricitypredictor.features.auth.AuthViewModel
 import com.abdulwaheed.smartelectricitypredictor.navigation.AppNavHost
 import com.abdulwaheed.smartelectricitypredictor.ui.theme.SmartElectricityPredictorTheme
 import com.firebase.ui.auth.AuthUI
 import com.firebase.ui.auth.IdpResponse
 
 class MainActivity : ComponentActivity() {
+    private var firebaseSignInResultHandler: ((Boolean, Throwable?) -> Unit)? = null
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        val vm: AuthViewModel by viewModels()
         // launcher for FirebaseUI sign-in flow
         val firebaseLauncher =
             registerForActivityResult(ActivityResultContracts.StartActivityForResult()) { result ->
                 val response = IdpResponse.fromResultIntent(result.data)
-                if (result.resultCode == Activity.RESULT_OK) {
-                    // Signed in successfully, inform ViewModel to refresh auth state
-                    vm.checkAuthAndNavigate()
-                } else {
-                    // handle error if needed
-                    val message = response?.error?.localizedMessage
-                    // update VM state with error
-                    // Note: ViewModel has no direct method for error from FirebaseUI; instead check Auth state
-                }
+                val handler = firebaseSignInResultHandler
+                firebaseSignInResultHandler = null
+                handler?.invoke(result.resultCode == Activity.RESULT_OK, response?.error)
             }
         enableEdgeToEdge()
         setContent {
             SmartElectricityPredictorTheme {
                 // Host the app navigation; pass a lambda to start FirebaseUI sign-in flow
-                AppNavHost(startFirebaseSignIn = {
+                AppNavHost(startFirebaseSignIn = { onResult ->
+                    firebaseSignInResultHandler = onResult
                     val providers = arrayListOf(
                         AuthUI.IdpConfig.EmailBuilder().build(),
                         AuthUI.IdpConfig.GoogleBuilder().build()
@@ -48,6 +42,8 @@ class MainActivity : ComponentActivity() {
                     val signInIntent = AuthUI.getInstance()
                         .createSignInIntentBuilder()
                         .setAvailableProviders(providers)
+                        .setCredentialManagerEnabled(false)
+                        .setTheme(R.style.Theme_FirebaseUI)
                         .build()
                     firebaseLauncher.launch(signInIntent)
                 })
