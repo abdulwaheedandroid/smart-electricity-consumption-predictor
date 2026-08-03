@@ -107,25 +107,30 @@ Do not redesign the authentication architecture unless explicitly requested.
 
 # Firestore Rules
 
-Collection
+Profile Path
 
-users
+users/{authenticatedUid}
 
-Document ID
-
-FirebaseAuth.currentUser.uid
+The document ID must be `FirebaseAuth.currentUser.uid`.
 
 Document Structure
 
+- uid
 - fullName
 - email
-- phone
 - age
 - gender
+- cellNumber
 - createdAt
 - updatedAt
 
 One authenticated user must have exactly one profile document.
+
+Firestore errors must remain distinct from Profile Not Found. A failed Firestore read must
+never be interpreted as a missing profile document.
+
+Deleting a profile deletes only `users/{uid}`. It must not delete the Firebase Authentication
+account.
 
 ---
 
@@ -171,6 +176,9 @@ Do not introduce
 unless explicitly requested.
 
 Reuse the existing dependency creation approach.
+
+Dependency injection will be migrated through a separate approved architecture task after
+v1.1.0. Do not include that migration in profile, dashboard, or other feature work.
 
 ---
 

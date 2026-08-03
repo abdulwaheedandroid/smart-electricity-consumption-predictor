@@ -1,0 +1,50 @@
+rules_version = '2';
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+    match /users/{userId} {
+      function isOwner() {
+        return request.auth != null && request.auth.uid == userId;
+      }
+
+      function hasValidProfileFields() {
+        return request.resource.data.keys().hasOnly([
+          'uid',
+          'fullName',
+          'email',
+          'age',
+          'gender',
+          'cellNumber',
+          'createdAt',
+          'updatedAt'
+        ])
+        && request.resource.data.keys().hasAll([
+          'uid',
+          'fullName',
+          'email',
+          'age',
+          'gender',
+          'cellNumber',
+          'createdAt',
+          'updatedAt'
+        ])
+        && request.resource.data.uid == userId
+        && request.resource.data.fullName is string
+        && request.resource.data.email is string
+        && request.resource.data.age is int
+        && request.resource.data.age >= 1
+        && request.resource.data.age <= 120
+        && request.resource.data.gender is string
+        && request.resource.data.cellNumber is string
+        && request.resource.data.createdAt is timestamp
+        && request.resource.data.updatedAt is timestamp;
+      }
+
+      allow read, delete: if isOwner();
+      allow create: if isOwner() && hasValidProfileFields();
+      allow update: if isOwner()
+        && hasValidProfileFields()
+        && request.resource.data.createdAt == resource.data.createdAt;
+    }
+  }
+}

@@ -1,6 +1,7 @@
 package com.abdulwaheed.smartelectricitypredictor.di
 
 import com.abdulwaheed.smartelectricitypredictor.data.repository.AuthRepositoryImpl
+import com.abdulwaheed.smartelectricitypredictor.data.repository.ProfileRepositoryImpl
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.FirebaseFirestore
 
@@ -12,5 +13,6 @@ object ServiceLocator {
     val auth: FirebaseAuth by lazy { FirebaseAuth.getInstance() }
     val firestore: FirebaseFirestore by lazy { FirebaseFirestore.getInstance() }
     val authRepository: AuthRepositoryImpl by lazy { AuthRepositoryImpl(auth) }
+    val profileRepository: ProfileRepositoryImpl by lazy { ProfileRepositoryImpl(firestore) }
 }
 

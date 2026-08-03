@@ -15,6 +15,8 @@ import com.abdulwaheed.smartelectricitypredictor.features.auth.ui.LoginScreen
 import com.abdulwaheed.smartelectricitypredictor.features.auth.ui.RegisterScreen
 import com.abdulwaheed.smartelectricitypredictor.features.auth.ui.SplashScreen
 import com.abdulwaheed.smartelectricitypredictor.features.home.ui.HomeScreen
+import com.abdulwaheed.smartelectricitypredictor.features.profile.ProfileViewModel
+import com.abdulwaheed.smartelectricitypredictor.features.profile.ui.ProfileSetupScreen
 
 @Composable
 fun AppNavHost(
@@ -28,7 +30,7 @@ fun AppNavHost(
             val state by vm.uiState.collectAsStateWithLifecycle()
             LaunchedEffect(Unit) { vm.checkAuthAndNavigate() }
             // Splash just shows loading while check runs
-            SplashScreen(onCheckAuth = { /* handled by LaunchedEffect */ })
+            SplashScreen(errorMessage = state.errorMessage, onRetry = vm::checkAuthAndNavigate)
             // react to navigation events from ViewModel
             LaunchedEffect(Unit) {
                 vm.navEvents.collectLatest { route ->
@@ -68,10 +70,73 @@ fun AppNavHost(
                 }
             }
         }
+        composable(NavDest.ProfileSetup.route) {
+            val vm: ProfileViewModel = viewModel()
+            val state by vm.uiState.collectAsStateWithLifecycle()
+            ProfileSetupScreen(
+                state = state,
+                onFullNameChanged = vm::onFullNameChanged,
+                onAgeChanged = vm::onAgeChanged,
+                onGenderChanged = vm::onGenderChanged,
+                onCellNumberChanged = vm::onCellNumberChanged,
+                onSave = vm::saveProfile,
+                onRetry = vm::loadProfile,
+                onRequestDelete = vm::requestDeleteProfile,
+                onConfirmDelete = vm::confirmDeleteProfile,
+                onCancelDelete = vm::cancelDeleteProfile
+            )
+            LaunchedEffect(Unit) {
+                vm.profileSaved.collectLatest {
+                    navController.navigate(NavDest.Home.route) {
+                        popUpTo(NavDest.ProfileSetup.route) { inclusive = true }
+                    }
+                }
+            }
+            LaunchedEffect(Unit) {
+                vm.profileDeleted.collectLatest {
+                    navController.navigate(NavDest.ProfileSetup.route) {
+                        popUpTo(NavDest.ProfileSetup.route) { inclusive = true }
+                    }
+                }
+            }
+        }
+        composable(NavDest.Profile.route) {
+            val vm: ProfileViewModel = viewModel()
+            val state by vm.uiState.collectAsStateWithLifecycle()
+            ProfileSetupScreen(
+                state = state,
+                onFullNameChanged = vm::onFullNameChanged,
+                onAgeChanged = vm::onAgeChanged,
+                onGenderChanged = vm::onGenderChanged,
+                onCellNumberChanged = vm::onCellNumberChanged,
+                onSave = vm::saveProfile,
+                onRetry = vm::loadProfile,
+                onRequestDelete = vm::requestDeleteProfile,
+                onConfirmDelete = vm::confirmDeleteProfile,
+                onCancelDelete = vm::cancelDeleteProfile
+            )
+            LaunchedEffect(Unit) {
+                vm.profileSaved.collectLatest {
+                    navController.navigate(NavDest.Home.route) {
+                        popUpTo(NavDest.Profile.route) { inclusive = true }
+                    }
+                }
+            }
+            LaunchedEffect(Unit) {
+                vm.profileDeleted.collectLatest {
+                    navController.navigate(NavDest.ProfileSetup.route) {
+                        popUpTo(NavDest.Profile.route) { inclusive = true }
+                    }
+                }
+            }
+        }
         composable(NavDest.Home.route) {
             val vm: com.abdulwaheed.smartelectricitypredictor.features.auth.AuthViewModel = viewModel()
             val state by vm.uiState.collectAsStateWithLifecycle()
-            HomeScreen(onSignOut = { vm.signOut() })
+            HomeScreen(
+                onViewProfile = { navController.navigate(NavDest.Profile.route) },
+                onSignOut = { vm.signOut() }
+            )
             LaunchedEffect(Unit) {
                 vm.navEvents.collectLatest { route ->
                     navController.navigate(route) {

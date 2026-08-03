@@ -10,9 +10,16 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 
 @Composable
-fun HomeScreen(onSignOut: () -> Unit, modifier: Modifier = Modifier) {
+fun HomeScreen(
+    onViewProfile: () -> Unit,
+    onSignOut: () -> Unit,
+    modifier: Modifier = Modifier
+) {
     Column(modifier = modifier.padding(16.dp).fillMaxSize()) {
         Text("Welcome")
+        Button(onClick = onViewProfile) {
+            Text("View profile")
+        }
         Button(onClick = onSignOut) {
             Text("Sign out")
         }

@@ -38,15 +38,23 @@ Features
 
 # Phase 3 — User Profile
 
-Status: ⏳ Planned
+Status: ✅ Completed
 
 Features
 
+- Profile Setup
+- Profile Existence Check
 - Create Profile
 - View Profile
-- Edit Profile
-- Delete Profile
-- Firestore Integration
+- Update Profile
+- Delete Firestore Profile
+- Profile Validation
+- Created and Updated Timestamp Handling
+- Loading, Retry, and Error Handling
+- Firestore Integration at `users/{uid}`
+
+Deleting a profile removes only the authenticated user's Firestore document. It does not
+delete the Firebase Authentication account.
 
 ---
 
@@ -131,14 +139,13 @@ predictions
 
 # Current Sprint
 
-Complete User Profile Module
+Home Dashboard and Application Navigation
 
 Tasks
 
-- Create Firestore Profile
-- Read Profile
-- Update Profile
-- Delete Profile
+- Design the Home Dashboard
+- Refine authenticated application navigation
+- Preserve completed authentication and profile routing
 
 ---
 

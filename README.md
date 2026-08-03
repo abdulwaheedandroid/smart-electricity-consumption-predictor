@@ -34,8 +34,8 @@ The system is designed to help users:
 | Form Validation and Error Handling | Complete |
 | Session Restoration | Complete |
 | Logout | Complete |
-| Google Sign-In | Pending final verification |
-| User Profile | Planned |
+| Google Sign-In | Complete |
+| User Profile | Complete |
 | Appliance Management | Planned |
 | Consumption Tracking | Planned |
 | Prediction Engine | Planned |
@@ -62,13 +62,21 @@ For detailed development progress, see [`PROJECT_ROADMAP.md`](PROJECT_ROADMAP.md
 
 ### User Profile
 
-Planned features:
+Implemented and runtime-tested features:
 
-- Create a user profile
-- View profile information
-- Update profile information
-- Delete profile data
-- Store profile data in Cloud Firestore
+- Profile setup for authenticated users
+- Profile-existence check after email/password or Google authentication
+- Create, read, view, update, and delete profile data in Cloud Firestore
+- Immutable `StateFlow` UI state with validation, loading, retry, and error feedback
+- Server timestamp handling that preserves `createdAt` and refreshes `updatedAt`
+- Explicit confirmation before deleting the Firestore profile
+- Navigation to Profile Setup when an authenticated user has no profile
+- Navigation to Home when an authenticated user has an existing profile
+
+The profile document is stored at `users/{uid}`, where `uid` is the authenticated
+Firebase user's UID. The UID is used internally as the document ID and is not displayed
+on the profile form. Email is obtained from Firebase Authentication and displayed as a
+read-only field.
 
 ### Appliance Management
 
@@ -240,27 +248,29 @@ The Firestore schema will evolve as modules are implemented.
 ### Users Collection
 
 ```text
-users/{userId}
+users/{uid}
 ```
 
-Planned fields:
+Implemented fields:
 
 ```text
+uid
 fullName
 email
-phone
 age
 gender
+cellNumber
 createdAt
 updatedAt
 ```
 
-The document ID will match the authenticated Firebase user's UID.
+The document ID matches the authenticated Firebase user's UID. UID is retained internally
+and is not displayed in the UI. Email is sourced from Firebase Authentication and displayed
+read-only.
 
-### Planned Collections
+### Other Planned Collections
 
 ```text
-users
 appliances
 consumption_logs
 predictions
@@ -279,9 +289,9 @@ Authentication Check
   ├── Unauthenticated → Login / Registration
   └── Authenticated
          ↓
-     Profile Check
-         ↓
-       Home
+    Profile Check
+      ├── Missing Profile → Profile Setup → Home
+      └── Existing Profile → Home
          ↓
   Appliance Management
          ↓
@@ -299,13 +309,13 @@ Authentication Check
 - Splash screen
 - Login screen
 - Registration screen
+- Home screen
+- Profile setup screen
+- Profile view and edit screen
+- Delete profile confirmation
 
 ### Planned
 
-- Home screen
-- Create profile screen
-- View profile screen
-- Edit profile screen
 - Appliance list screen
 - Add appliance screen
 - Edit appliance screen
@@ -396,9 +406,9 @@ gradlew.bat build
 
 ---
 
-## Runtime Authentication Testing
+## Runtime Authentication Regression Checklist
 
-Before marking authentication as fully complete, verify:
+Continue verifying the completed authentication module against these regression cases:
 
 - Registration with a valid email and password
 - Invalid email validation
@@ -470,17 +480,16 @@ Documentation should be updated whenever:
 
 ## Roadmap
 
-1. Complete and verify Google Sign-In
-2. Build the User Profile module
-3. Build Appliance Management
-4. Add Consumption Tracking
-5. Implement electricity cost calculations
-6. Build the Prediction Engine
-7. Add Reports and Analytics
-8. Complete Settings
-9. Add testing
-10. Add screenshots and diagrams
-11. Prepare the final university submission
+1. Build the Home Dashboard and application navigation
+2. Build Appliance Management
+3. Add Consumption Tracking
+4. Implement electricity cost calculations
+5. Build the Prediction Engine
+6. Add Reports and Analytics
+7. Complete Settings
+8. Expand automated testing
+9. Add screenshots and diagrams
+10. Prepare the final university submission
 
 ---
 
