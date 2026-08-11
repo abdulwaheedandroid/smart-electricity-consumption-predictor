@@ -5,7 +5,13 @@ The project follows [Semantic Versioning](https://semver.org/).
 
 ## [Unreleased]
 
-No unreleased changes are currently documented.
+### Architecture
+
+- Migrated dependency injection to Hilt and removed the ServiceLocator.
+- Provided FirebaseAuth and FirebaseFirestore through Hilt.
+- Bound AuthRepository and ProfileRepository to their implementations through Hilt.
+- Migrated AuthViewModel and ProfileViewModel to `@HiltViewModel` constructor injection.
+- Updated Compose navigation to obtain ViewModels with `hiltViewModel()`.
 
 ## [1.1.0] - 2026-08-03
 

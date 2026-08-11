@@ -135,6 +135,7 @@ Planned features:
 - ViewModel
 - StateFlow
 - Kotlin Coroutines
+- Hilt dependency injection
 
 ### Architecture
 
@@ -142,6 +143,7 @@ Planned features:
 - Repository pattern
 - Unidirectional UI state
 - Separation of UI, presentation, and data responsibilities
+- Hilt for dependency injection
 
 ### Backend
 
@@ -205,6 +207,16 @@ Responsible for:
 - Mapping backend errors to application-friendly results
 
 Composable functions must not access Firebase APIs directly.
+
+### Dependency Injection
+
+Hilt is the project's dependency-injection mechanism. The application is initialized with
+`@HiltAndroidApp`, and Compose navigation obtains ViewModels with `hiltViewModel()`.
+
+- `FirebaseAuth` and `FirebaseFirestore` are provided through Hilt.
+- `AuthRepository` and `ProfileRepository` are bound to their implementations through Hilt.
+- `AuthViewModel` and `ProfileViewModel` use `@HiltViewModel` and constructor injection.
+- The former `ServiceLocator` has been completely removed.
 
 ---
 
@@ -437,7 +449,7 @@ Important principles include:
 - Follow MVVM
 - Avoid duplicate classes, ViewModels, repositories, and navigation graphs
 - Keep changes focused on the requested feature
-- Do not introduce dependency injection without an explicit decision
+- Use the existing Hilt dependency-injection setup; do not introduce another DI mechanism
 - Build the project after changes
 - Consider a feature complete only after runtime testing
 
@@ -497,7 +509,6 @@ Documentation should be updated whenever:
 
 Potential improvements after the core application is complete:
 
-- Dependency injection
 - Unit testing
 - Compose UI testing
 - Offline caching

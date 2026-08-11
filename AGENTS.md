@@ -59,6 +59,12 @@ Data Layer
 - Cloud Firestore
 - Repository Classes
 
+Dependency Injection
+
+- Hilt provides Firebase dependencies and repository bindings.
+- ViewModels use `@HiltViewModel` with constructor injection.
+- Compose navigation obtains ViewModels with `hiltViewModel()`.
+
 Never access Firebase directly from a Composable.
 
 ---
@@ -167,18 +173,12 @@ Avoid
 
 # Dependency Management
 
-Do not introduce
+Use the existing Hilt dependency-injection setup.
 
-- Hilt
-- Koin
-- Dagger
+- Do not introduce Koin or another dependency-injection mechanism.
+- Keep Firebase providers and repository bindings in the existing Hilt modules.
 
-unless explicitly requested.
-
-Reuse the existing dependency creation approach.
-
-Dependency injection will be migrated through a separate approved architecture task after
-v1.1.0. Do not include that migration in profile, dashboard, or other feature work.
+Do not redesign dependency injection unless explicitly requested.
 
 ---
 

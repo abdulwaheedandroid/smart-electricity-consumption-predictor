@@ -125,6 +125,17 @@ Features
 
 ---
 
+# Completed Architecture
+
+- Hilt configured as the project dependency-injection mechanism
+- FirebaseAuth and FirebaseFirestore provided through Hilt
+- AuthRepository and ProfileRepository bound through Hilt
+- AuthViewModel and ProfileViewModel use `@HiltViewModel` constructor injection
+- Compose navigation uses `hiltViewModel()`
+- ServiceLocator removed
+
+---
+
 # Firestore Collections
 
 users
@@ -164,7 +175,6 @@ A feature is considered complete only when
 
 # Future Improvements
 
-- Hilt
 - Unit Testing
 - UI Testing
 - Offline Cache
