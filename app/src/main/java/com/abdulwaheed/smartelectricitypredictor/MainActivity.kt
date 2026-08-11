@@ -1,6 +1,5 @@
 package com.abdulwaheed.smartelectricitypredictor
 
-// No Hilt: using simple ServiceLocator for dependencies
 import android.app.Activity
 import android.os.Bundle
 import androidx.activity.ComponentActivity
@@ -15,7 +14,9 @@ import com.abdulwaheed.smartelectricitypredictor.navigation.AppNavHost
 import com.abdulwaheed.smartelectricitypredictor.ui.theme.SmartElectricityPredictorTheme
 import com.firebase.ui.auth.AuthUI
 import com.firebase.ui.auth.IdpResponse
+import dagger.hilt.android.AndroidEntryPoint
 
+@AndroidEntryPoint
 class MainActivity : ComponentActivity() {
     private var firebaseSignInResultHandler: ((Boolean, Throwable?) -> Unit)? = null
 

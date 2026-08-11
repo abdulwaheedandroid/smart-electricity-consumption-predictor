@@ -1,18 +1,22 @@
 package com.abdulwaheed.smartelectricitypredictor.di
 
-import com.abdulwaheed.smartelectricitypredictor.data.repository.AuthRepositoryImpl
-import com.abdulwaheed.smartelectricitypredictor.data.repository.ProfileRepositoryImpl
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.FirebaseFirestore
+import dagger.Module
+import dagger.Provides
+import dagger.hilt.InstallIn
+import dagger.hilt.components.SingletonComponent
+import javax.inject.Singleton
 
-/**
- * Simple ServiceLocator used instead of Hilt for this project to provide Firebase instances
- * and repository singletons. This avoids adding kapt/ksp/hilt build-time plugins.
- */
-object ServiceLocator {
-    val auth: FirebaseAuth by lazy { FirebaseAuth.getInstance() }
-    val firestore: FirebaseFirestore by lazy { FirebaseFirestore.getInstance() }
-    val authRepository: AuthRepositoryImpl by lazy { AuthRepositoryImpl(auth) }
-    val profileRepository: ProfileRepositoryImpl by lazy { ProfileRepositoryImpl(firestore) }
+@Module
+@InstallIn(SingletonComponent::class)
+object FirebaseModule {
+    @Provides
+    @Singleton
+    fun provideFirebaseAuth(): FirebaseAuth = FirebaseAuth.getInstance()
+
+    @Provides
+    @Singleton
+    fun provideFirebaseFirestore(): FirebaseFirestore = FirebaseFirestore.getInstance()
 }
 

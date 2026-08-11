@@ -2,7 +2,7 @@ package com.abdulwaheed.smartelectricitypredictor.navigation
 
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
-import androidx.lifecycle.viewmodel.compose.viewModel
+import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.navigation.NavHostController
 import androidx.compose.runtime.LaunchedEffect
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
@@ -26,7 +26,7 @@ fun AppNavHost(
 ) {
     NavHost(navController = navController, startDestination = NavDest.Splash.route, modifier = modifier) {
         composable(NavDest.Splash.route) {
-            val vm: com.abdulwaheed.smartelectricitypredictor.features.auth.AuthViewModel = viewModel()
+            val vm: com.abdulwaheed.smartelectricitypredictor.features.auth.AuthViewModel = hiltViewModel()
             val state by vm.uiState.collectAsStateWithLifecycle()
             LaunchedEffect(Unit) { vm.checkAuthAndNavigate() }
             // Splash just shows loading while check runs
@@ -41,7 +41,7 @@ fun AppNavHost(
             }
         }
         composable(NavDest.Login.route) {
-            val vm: com.abdulwaheed.smartelectricitypredictor.features.auth.AuthViewModel = viewModel()
+            val vm: com.abdulwaheed.smartelectricitypredictor.features.auth.AuthViewModel = hiltViewModel()
             val state by vm.uiState.collectAsStateWithLifecycle()
             // startFirebaseSignIn is forwarded to Activity
             LoginScreen(onLogin = { email, password -> vm.signInWithEmail(email, password) }, onGoogleSignIn = {
@@ -57,7 +57,7 @@ fun AppNavHost(
             }
         }
         composable(NavDest.Register.route) {
-            val vm: com.abdulwaheed.smartelectricitypredictor.features.auth.AuthViewModel = viewModel()
+            val vm: com.abdulwaheed.smartelectricitypredictor.features.auth.AuthViewModel = hiltViewModel()
             val state by vm.uiState.collectAsStateWithLifecycle()
             RegisterScreen(onRegister = { email, password -> vm.signUpWithEmail(email, password) }, onNavigateToLogin = {
                 navController.popBackStack(); navController.navigate(NavDest.Login.route)
@@ -71,7 +71,7 @@ fun AppNavHost(
             }
         }
         composable(NavDest.ProfileSetup.route) {
-            val vm: ProfileViewModel = viewModel()
+            val vm: ProfileViewModel = hiltViewModel()
             val state by vm.uiState.collectAsStateWithLifecycle()
             ProfileSetupScreen(
                 state = state,
@@ -101,7 +101,7 @@ fun AppNavHost(
             }
         }
         composable(NavDest.Profile.route) {
-            val vm: ProfileViewModel = viewModel()
+            val vm: ProfileViewModel = hiltViewModel()
             val state by vm.uiState.collectAsStateWithLifecycle()
             ProfileSetupScreen(
                 state = state,
@@ -131,7 +131,7 @@ fun AppNavHost(
             }
         }
         composable(NavDest.Home.route) {
-            val vm: com.abdulwaheed.smartelectricitypredictor.features.auth.AuthViewModel = viewModel()
+            val vm: com.abdulwaheed.smartelectricitypredictor.features.auth.AuthViewModel = hiltViewModel()
             val state by vm.uiState.collectAsStateWithLifecycle()
             HomeScreen(
                 onViewProfile = { navController.navigate(NavDest.Profile.route) },

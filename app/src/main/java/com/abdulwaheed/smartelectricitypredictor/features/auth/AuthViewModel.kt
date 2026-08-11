@@ -3,7 +3,6 @@ package com.abdulwaheed.smartelectricitypredictor.features.auth
 import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.abdulwaheed.smartelectricitypredictor.di.ServiceLocator
 import com.abdulwaheed.smartelectricitypredictor.domain.model.User
 import com.abdulwaheed.smartelectricitypredictor.domain.repository.AuthRepository
 import com.abdulwaheed.smartelectricitypredictor.domain.repository.ProfileRepository
@@ -12,15 +11,18 @@ import com.abdulwaheed.smartelectricitypredictor.navigation.NavDest
 import com.abdulwaheed.smartelectricitypredictor.util.AuthValidation
 import com.abdulwaheed.smartelectricitypredictor.util.FirebaseAuthErrorHandler
 import com.abdulwaheed.smartelectricitypredictor.util.FirestoreProfileErrorHandler
+import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
+import javax.inject.Inject
 
-class AuthViewModel(
-    private val authRepository: AuthRepository = ServiceLocator.authRepository,
-    private val profileRepository: ProfileRepository = ServiceLocator.profileRepository
+@HiltViewModel
+class AuthViewModel @Inject constructor(
+    private val authRepository: AuthRepository,
+    private val profileRepository: ProfileRepository
 ) : ViewModel() {
     // Startup and authentication operations explicitly opt into loading as needed.
     private val _uiState = MutableStateFlow(AuthUiState())

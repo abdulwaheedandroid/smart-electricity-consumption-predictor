@@ -6,9 +6,10 @@ import com.google.firebase.Timestamp
 import com.google.firebase.firestore.FieldValue
 import com.google.firebase.firestore.FirebaseFirestore
 import kotlinx.coroutines.suspendCancellableCoroutine
+import javax.inject.Inject
 import kotlin.coroutines.resume
 
-class ProfileRepositoryImpl(
+class ProfileRepositoryImpl @Inject constructor(
     private val firestore: FirebaseFirestore
 ) : ProfileRepository {
     override suspend fun getProfile(uid: String): Result<UserProfile?> = runCatching {

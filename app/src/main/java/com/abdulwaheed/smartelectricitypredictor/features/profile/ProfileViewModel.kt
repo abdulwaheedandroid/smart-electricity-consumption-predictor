@@ -2,22 +2,24 @@ package com.abdulwaheed.smartelectricitypredictor.features.profile
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.abdulwaheed.smartelectricitypredictor.di.ServiceLocator
 import com.abdulwaheed.smartelectricitypredictor.domain.model.UserProfile
 import com.abdulwaheed.smartelectricitypredictor.domain.repository.AuthRepository
 import com.abdulwaheed.smartelectricitypredictor.domain.repository.ProfileRepository
 import com.abdulwaheed.smartelectricitypredictor.features.profile.state.ProfileUiState
 import com.abdulwaheed.smartelectricitypredictor.util.FirestoreProfileErrorHandler
 import com.abdulwaheed.smartelectricitypredictor.util.ProfileValidation
+import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
+import javax.inject.Inject
 
-class ProfileViewModel(
-    private val authRepository: AuthRepository = ServiceLocator.authRepository,
-    private val profileRepository: ProfileRepository = ServiceLocator.profileRepository
+@HiltViewModel
+class ProfileViewModel @Inject constructor(
+    private val authRepository: AuthRepository,
+    private val profileRepository: ProfileRepository
 ) : ViewModel() {
     private val _uiState = MutableStateFlow(ProfileUiState())
     val uiState = _uiState.asStateFlow()

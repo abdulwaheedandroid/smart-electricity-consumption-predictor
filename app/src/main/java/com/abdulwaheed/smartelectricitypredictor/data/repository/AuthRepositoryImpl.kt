@@ -4,10 +4,11 @@ import com.abdulwaheed.smartelectricitypredictor.domain.model.User
 import com.abdulwaheed.smartelectricitypredictor.domain.repository.AuthRepository
 import com.google.firebase.auth.FirebaseAuth
 import kotlinx.coroutines.suspendCancellableCoroutine
+import javax.inject.Inject
 import kotlin.coroutines.resume
 import kotlin.coroutines.resumeWithException
 
-class AuthRepositoryImpl(
+class AuthRepositoryImpl @Inject constructor(
     private val auth: FirebaseAuth
 ) : AuthRepository {
     override fun getCurrentUser(): User? {
