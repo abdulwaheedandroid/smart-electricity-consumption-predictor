@@ -7,5 +7,6 @@ sealed class NavDest(val route: String) {
     object ProfileSetup : NavDest("profile_setup")
     object Profile : NavDest("profile")
     object Home : NavDest("home")
+    object Appliances : NavDest("appliances")
 }
 

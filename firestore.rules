@@ -45,6 +45,42 @@ service cloud.firestore {
       allow update: if isOwner()
         && hasValidProfileFields()
         && request.resource.data.createdAt == resource.data.createdAt;
+
+      match /appliances/{applianceId} {
+        function hasValidApplianceFields() {
+          return request.resource.data.keys().hasOnly([
+            'name',
+            'powerWatts',
+            'dailyUsageHours',
+            'createdAt',
+            'updatedAt'
+          ])
+          && request.resource.data.keys().hasAll([
+            'name',
+            'powerWatts',
+            'dailyUsageHours',
+            'createdAt',
+            'updatedAt'
+          ])
+          && request.resource.data.name is string
+          && request.resource.data.name.size() >= 2
+          && request.resource.data.name.size() <= 80
+          && request.resource.data.powerWatts is int
+          && request.resource.data.powerWatts >= 1
+          && request.resource.data.powerWatts <= 100000
+          && request.resource.data.dailyUsageHours is number
+          && request.resource.data.dailyUsageHours >= 0
+          && request.resource.data.dailyUsageHours <= 24
+          && request.resource.data.createdAt is timestamp
+          && request.resource.data.updatedAt is timestamp;
+        }
+
+        allow read, delete: if isOwner();
+        allow create: if isOwner() && hasValidApplianceFields();
+        allow update: if isOwner()
+          && hasValidApplianceFields()
+          && request.resource.data.createdAt == resource.data.createdAt;
+      }
     }
   }
 }

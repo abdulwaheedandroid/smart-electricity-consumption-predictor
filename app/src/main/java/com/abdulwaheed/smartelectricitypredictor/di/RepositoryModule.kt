@@ -1,7 +1,9 @@
 package com.abdulwaheed.smartelectricitypredictor.di
 
 import com.abdulwaheed.smartelectricitypredictor.data.repository.AuthRepositoryImpl
+import com.abdulwaheed.smartelectricitypredictor.data.repository.ApplianceRepositoryImpl
 import com.abdulwaheed.smartelectricitypredictor.data.repository.ProfileRepositoryImpl
+import com.abdulwaheed.smartelectricitypredictor.domain.repository.ApplianceRepository
 import com.abdulwaheed.smartelectricitypredictor.domain.repository.AuthRepository
 import com.abdulwaheed.smartelectricitypredictor.domain.repository.ProfileRepository
 import dagger.Binds
@@ -13,6 +15,10 @@ import javax.inject.Singleton
 @Module
 @InstallIn(SingletonComponent::class)
 abstract class RepositoryModule {
+    @Binds
+    @Singleton
+    abstract fun bindApplianceRepository(implementation: ApplianceRepositoryImpl): ApplianceRepository
+
     @Binds
     @Singleton
     abstract fun bindAuthRepository(implementation: AuthRepositoryImpl): AuthRepository
