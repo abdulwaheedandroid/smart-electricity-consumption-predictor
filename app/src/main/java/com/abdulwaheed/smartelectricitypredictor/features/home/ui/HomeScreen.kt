@@ -15,6 +15,7 @@ import androidx.compose.ui.unit.dp
 @Composable
 fun HomeScreen(
     onViewProfile: () -> Unit,
+    onViewAppliances: () -> Unit,
     onSignOut: () -> Unit,
     modifier: Modifier = Modifier
 ) {
@@ -36,6 +37,12 @@ fun HomeScreen(
             text = "Dashboard data will appear here as future modules are implemented.",
             style = MaterialTheme.typography.bodyMedium
         )
+        Button(
+            onClick = onViewAppliances,
+            modifier = Modifier.fillMaxWidth()
+        ) {
+            Text("My appliances")
+        }
         Button(
             onClick = onViewProfile,
             modifier = Modifier.fillMaxWidth()

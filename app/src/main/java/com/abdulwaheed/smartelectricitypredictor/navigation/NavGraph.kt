@@ -14,6 +14,8 @@ import androidx.navigation.compose.rememberNavController
 import com.abdulwaheed.smartelectricitypredictor.features.auth.ui.LoginScreen
 import com.abdulwaheed.smartelectricitypredictor.features.auth.ui.RegisterScreen
 import com.abdulwaheed.smartelectricitypredictor.features.auth.ui.SplashScreen
+import com.abdulwaheed.smartelectricitypredictor.features.appliance.ApplianceViewModel
+import com.abdulwaheed.smartelectricitypredictor.features.appliance.ui.ApplianceScreen
 import com.abdulwaheed.smartelectricitypredictor.features.home.ui.HomeScreen
 import com.abdulwaheed.smartelectricitypredictor.features.profile.ProfileViewModel
 import com.abdulwaheed.smartelectricitypredictor.features.profile.ui.ProfileSetupScreen
@@ -135,6 +137,7 @@ fun AppNavHost(
             val state by vm.uiState.collectAsStateWithLifecycle()
             HomeScreen(
                 onViewProfile = { navController.navigate(NavDest.Profile.route) },
+                onViewAppliances = { navController.navigate(NavDest.Appliances.route) },
                 onSignOut = { vm.signOut() }
             )
             LaunchedEffect(Unit) {
@@ -144,6 +147,25 @@ fun AppNavHost(
                     }
                 }
             }
+        }
+        composable(NavDest.Appliances.route) {
+            val vm: ApplianceViewModel = hiltViewModel()
+            val state by vm.uiState.collectAsStateWithLifecycle()
+            ApplianceScreen(
+                state = state,
+                onSearchQueryChanged = vm::onSearchQueryChanged,
+                onAddAppliance = vm::startAddingAppliance,
+                onEditAppliance = vm::startEditingAppliance,
+                onDeleteAppliance = vm::requestDeleteAppliance,
+                onNameChanged = vm::onNameChanged,
+                onPowerWattsChanged = vm::onPowerWattsChanged,
+                onDailyUsageHoursChanged = vm::onDailyUsageHoursChanged,
+                onSaveAppliance = vm::saveAppliance,
+                onDismissEditor = vm::dismissEditor,
+                onConfirmDelete = vm::confirmDeleteAppliance,
+                onCancelDelete = vm::cancelDeleteAppliance,
+                onRetry = vm::loadAppliances
+            )
         }
     }
 }
