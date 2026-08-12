@@ -13,6 +13,21 @@ The project follows [Semantic Versioning](https://semver.org/).
 - Migrated AuthViewModel and ProfileViewModel to `@HiltViewModel` constructor injection.
 - Updated Compose navigation to obtain ViewModels with `hiltViewModel()`.
 
+## [1.2.0] - 2026-08-13
+
+### Added
+
+- Appliance Management with add, view, edit, and delete operations.
+- Delete confirmation and cancellation for appliance removal.
+- Appliance search by name.
+- Appliance input validation and unit tests.
+
+### Firestore
+
+- Stored appliances at `users/{uid}/appliances/{applianceId}`.
+- Added and deployed ownership-scoped Firestore security rules for appliances.
+- Manually tested Firestore appliance access and security behavior.
+
 ## [1.1.0] - 2026-08-03
 
 ### Added
