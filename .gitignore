@@ -16,3 +16,9 @@ local.properties
 app/google-services.json
 
 .idea/firebender/
+
+.kotlin/
+
+# VU submission signing files
+submission-debug.jks
+keystore.properties

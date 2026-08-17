@@ -6,6 +6,12 @@ plugins {
     id("com.google.gms.google-services")
 }
 
+import java.util.Properties
+
+val keystoreProperties = Properties().apply {
+    rootProject.file("keystore.properties").inputStream().use(::load)
+}
+
 android {
     namespace = "com.abdulwaheed.smartelectricitypredictor"
     compileSdk {
@@ -24,7 +30,19 @@ android {
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
     }
 
+    signingConfigs {
+        create("submissionDebug") {
+            storeFile = rootProject.file(keystoreProperties.getProperty("storeFile"))
+            storePassword = keystoreProperties.getProperty("storePassword")
+            keyAlias = keystoreProperties.getProperty("keyAlias")
+            keyPassword = keystoreProperties.getProperty("keyPassword")
+        }
+    }
+
     buildTypes {
+        debug {
+            signingConfig = signingConfigs.getByName("submissionDebug")
+        }
         release {
             isMinifyEnabled = false
             proguardFiles(

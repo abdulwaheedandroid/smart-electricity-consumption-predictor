@@ -12,9 +12,7 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import com.abdulwaheed.smartelectricitypredictor.features.auth.ui.LoginScreen
-import com.abdulwaheed.smartelectricitypredictor.features.auth.ui.RegisterScreen
 import com.abdulwaheed.smartelectricitypredictor.features.auth.ui.SplashScreen
-import com.abdulwaheed.smartelectricitypredictor.features.home.ui.HomeScreen
 import com.abdulwaheed.smartelectricitypredictor.features.profile.ProfileViewModel
 import com.abdulwaheed.smartelectricitypredictor.features.profile.ui.ProfileSetupScreen
 
@@ -43,11 +41,14 @@ fun AppNavHost(
         composable(NavDest.Login.route) {
             val vm: com.abdulwaheed.smartelectricitypredictor.features.auth.AuthViewModel = hiltViewModel()
             val state by vm.uiState.collectAsStateWithLifecycle()
-            // startFirebaseSignIn is forwarded to Activity
-            LoginScreen(onLogin = { email, password -> vm.signInWithEmail(email, password) }, onGoogleSignIn = {
-                vm.onGoogleSignInStarted()
-                startFirebaseSignIn(vm::handleGoogleSignInResult)
-            }, onNavigateToRegister = { navController.navigate(NavDest.Register.route) }, isLoading = state.isLoading, errorMessage = state.errorMessage)
+            LoginScreen(
+                onSignIn = {
+                    vm.onFirebaseUiSignInStarted()
+                    startFirebaseSignIn(vm::handleFirebaseUiSignInResult)
+                },
+                isLoading = state.isLoading,
+                errorMessage = state.errorMessage
+            )
             LaunchedEffect(Unit) {
                 vm.navEvents.collectLatest { route ->
                     navController.navigate(route) {
@@ -56,91 +57,27 @@ fun AppNavHost(
                 }
             }
         }
-        composable(NavDest.Register.route) {
-            val vm: com.abdulwaheed.smartelectricitypredictor.features.auth.AuthViewModel = hiltViewModel()
-            val state by vm.uiState.collectAsStateWithLifecycle()
-            RegisterScreen(onRegister = { email, password -> vm.signUpWithEmail(email, password) }, onNavigateToLogin = {
-                navController.popBackStack(); navController.navigate(NavDest.Login.route)
-            }, isLoading = state.isLoading, errorMessage = state.errorMessage)
-            LaunchedEffect(Unit) {
-                vm.navEvents.collectLatest { route ->
-                    navController.navigate(route) {
-                        popUpTo(NavDest.Register.route) { inclusive = true }
-                    }
-                }
-            }
-        }
-        composable(NavDest.ProfileSetup.route) {
-            val vm: ProfileViewModel = hiltViewModel()
-            val state by vm.uiState.collectAsStateWithLifecycle()
-            ProfileSetupScreen(
-                state = state,
-                onFullNameChanged = vm::onFullNameChanged,
-                onAgeChanged = vm::onAgeChanged,
-                onGenderChanged = vm::onGenderChanged,
-                onCellNumberChanged = vm::onCellNumberChanged,
-                onSave = vm::saveProfile,
-                onRetry = vm::loadProfile,
-                onRequestDelete = vm::requestDeleteProfile,
-                onConfirmDelete = vm::confirmDeleteProfile,
-                onCancelDelete = vm::cancelDeleteProfile
-            )
-            LaunchedEffect(Unit) {
-                vm.profileSaved.collectLatest {
-                    navController.navigate(NavDest.Home.route) {
-                        popUpTo(NavDest.ProfileSetup.route) { inclusive = true }
-                    }
-                }
-            }
-            LaunchedEffect(Unit) {
-                vm.profileDeleted.collectLatest {
-                    navController.navigate(NavDest.ProfileSetup.route) {
-                        popUpTo(NavDest.ProfileSetup.route) { inclusive = true }
-                    }
-                }
-            }
-        }
         composable(NavDest.Profile.route) {
-            val vm: ProfileViewModel = hiltViewModel()
-            val state by vm.uiState.collectAsStateWithLifecycle()
+            val profileViewModel: ProfileViewModel = hiltViewModel()
+            val authViewModel: com.abdulwaheed.smartelectricitypredictor.features.auth.AuthViewModel = hiltViewModel()
+            val state by profileViewModel.uiState.collectAsStateWithLifecycle()
             ProfileSetupScreen(
                 state = state,
-                onFullNameChanged = vm::onFullNameChanged,
-                onAgeChanged = vm::onAgeChanged,
-                onGenderChanged = vm::onGenderChanged,
-                onCellNumberChanged = vm::onCellNumberChanged,
-                onSave = vm::saveProfile,
-                onRetry = vm::loadProfile,
-                onRequestDelete = vm::requestDeleteProfile,
-                onConfirmDelete = vm::confirmDeleteProfile,
-                onCancelDelete = vm::cancelDeleteProfile
+                onFullNameChanged = profileViewModel::onFullNameChanged,
+                onAgeChanged = profileViewModel::onAgeChanged,
+                onGenderChanged = profileViewModel::onGenderChanged,
+                onCellNumberChanged = profileViewModel::onCellNumberChanged,
+                onSave = profileViewModel::saveProfile,
+                onRetry = profileViewModel::loadProfile,
+                onRequestDelete = profileViewModel::requestDeleteProfile,
+                onConfirmDelete = profileViewModel::confirmDeleteProfile,
+                onCancelDelete = profileViewModel::cancelDeleteProfile,
+                onSignOut = authViewModel::signOut
             )
             LaunchedEffect(Unit) {
-                vm.profileSaved.collectLatest {
-                    navController.navigate(NavDest.Home.route) {
-                        popUpTo(NavDest.Profile.route) { inclusive = true }
-                    }
-                }
-            }
-            LaunchedEffect(Unit) {
-                vm.profileDeleted.collectLatest {
-                    navController.navigate(NavDest.ProfileSetup.route) {
-                        popUpTo(NavDest.Profile.route) { inclusive = true }
-                    }
-                }
-            }
-        }
-        composable(NavDest.Home.route) {
-            val vm: com.abdulwaheed.smartelectricitypredictor.features.auth.AuthViewModel = hiltViewModel()
-            val state by vm.uiState.collectAsStateWithLifecycle()
-            HomeScreen(
-                onViewProfile = { navController.navigate(NavDest.Profile.route) },
-                onSignOut = { vm.signOut() }
-            )
-            LaunchedEffect(Unit) {
-                vm.navEvents.collectLatest { route ->
+                authViewModel.navEvents.collectLatest { route ->
                     navController.navigate(route) {
-                        popUpTo(NavDest.Home.route) { inclusive = true }
+                        popUpTo(NavDest.Profile.route) { inclusive = true }
                     }
                 }
             }

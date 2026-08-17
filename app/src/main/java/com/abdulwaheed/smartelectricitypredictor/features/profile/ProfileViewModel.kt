@@ -9,9 +9,7 @@ import com.abdulwaheed.smartelectricitypredictor.features.profile.state.ProfileU
 import com.abdulwaheed.smartelectricitypredictor.util.FirestoreProfileErrorHandler
 import com.abdulwaheed.smartelectricitypredictor.util.ProfileValidation
 import dagger.hilt.android.lifecycle.HiltViewModel
-import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 import javax.inject.Inject
@@ -23,12 +21,6 @@ class ProfileViewModel @Inject constructor(
 ) : ViewModel() {
     private val _uiState = MutableStateFlow(ProfileUiState())
     val uiState = _uiState.asStateFlow()
-
-    private val _profileSaved = MutableSharedFlow<Unit>(extraBufferCapacity = 1)
-    val profileSaved = _profileSaved.asSharedFlow()
-
-    private val _profileDeleted = MutableSharedFlow<Unit>(extraBufferCapacity = 1)
-    val profileDeleted = _profileDeleted.asSharedFlow()
 
     init {
         loadProfile()
@@ -147,7 +139,6 @@ class ProfileViewModel @Inject constructor(
                         isSaving = false,
                         profileExists = true
                     )
-                    _profileSaved.emit(Unit)
                 },
                 onFailure = { exception ->
                     _uiState.value = _uiState.value.copy(
@@ -183,9 +174,12 @@ class ProfileViewModel @Inject constructor(
                 onSuccess = {
                     _uiState.value = _uiState.value.copy(
                         isDeleting = false,
-                        profileExists = false
+                        profileExists = false,
+                        fullName = "",
+                        age = "",
+                        gender = "",
+                        cellNumber = ""
                     )
-                    _profileDeleted.emit(Unit)
                 },
                 onFailure = { exception ->
                     _uiState.value = _uiState.value.copy(

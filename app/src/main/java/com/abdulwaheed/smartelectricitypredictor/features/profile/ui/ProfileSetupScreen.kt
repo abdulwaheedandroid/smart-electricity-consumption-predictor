@@ -5,6 +5,7 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.systemBarsPadding
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
@@ -15,6 +16,7 @@ import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.ExposedDropdownMenuBox
 import androidx.compose.material3.ExposedDropdownMenuDefaults
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
@@ -42,6 +44,7 @@ fun ProfileSetupScreen(
     onRequestDelete: () -> Unit,
     onConfirmDelete: () -> Unit,
     onCancelDelete: () -> Unit,
+    onSignOut: () -> Unit,
     modifier: Modifier = Modifier
 ) {
     if (state.isLoading) {
@@ -51,7 +54,12 @@ fun ProfileSetupScreen(
             verticalArrangement = Arrangement.Center
         ) {
             CircularProgressIndicator()
-            Text("Loading profile...", modifier = Modifier.padding(top = 12.dp))
+            Text(
+                text = "Loading profile...",
+                style = MaterialTheme.typography.bodyMedium,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                modifier = Modifier.padding(top = 12.dp)
+            )
         }
         return
     }
@@ -60,13 +68,20 @@ fun ProfileSetupScreen(
         modifier = modifier
             .fillMaxSize()
             .verticalScroll(rememberScrollState())
-            .padding(16.dp),
+            .systemBarsPadding()
+            .padding(horizontal = 24.dp, vertical = 16.dp),
         verticalArrangement = Arrangement.spacedBy(12.dp)
     ) {
-        Text(if (state.profileExists) "Your profile" else "Complete your profile")
         Text(
-            if (state.profileExists) "Review or update your profile information."
-            else "Enter your profile information before continuing."
+            text = if (state.profileExists) "Your profile" else "Complete your profile",
+            style = MaterialTheme.typography.headlineSmall,
+            color = MaterialTheme.colorScheme.onSurface
+        )
+        Text(
+            text = if (state.profileExists) "Review or update your profile information."
+            else "Enter your profile information before continuing.",
+            style = MaterialTheme.typography.bodyLarge,
+            color = MaterialTheme.colorScheme.onSurfaceVariant
         )
 
         ReadOnlyProfileField("Email", state.email, state)
@@ -110,8 +125,16 @@ fun ProfileSetupScreen(
         )
 
         state.errorMessage?.let { message ->
-            Text(message)
-            Button(onClick = onRetry, enabled = !state.isSaving && !state.isDeleting) {
+            Text(
+                text = message,
+                style = MaterialTheme.typography.bodyMedium,
+                color = MaterialTheme.colorScheme.error
+            )
+            Button(
+                onClick = onRetry,
+                enabled = !state.isSaving && !state.isDeleting,
+                modifier = Modifier.fillMaxWidth()
+            ) {
                 Text("Retry")
             }
         }
@@ -131,6 +154,13 @@ fun ProfileSetupScreen(
             ) {
                 if (state.isDeleting) CircularProgressIndicator() else Text("Delete profile")
             }
+        }
+        Button(
+            onClick = onSignOut,
+            enabled = !state.isSaving && !state.isDeleting,
+            modifier = Modifier.fillMaxWidth()
+        ) {
+            Text("Sign out")
         }
     }
 
