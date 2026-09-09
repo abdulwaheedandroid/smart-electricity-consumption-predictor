@@ -1,20 +1,17 @@
 package com.abdulwaheed.smartelectricitypredictor.features.auth
 
-import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.abdulwaheed.smartelectricitypredictor.domain.model.User
 import com.abdulwaheed.smartelectricitypredictor.domain.repository.AuthRepository
 import com.abdulwaheed.smartelectricitypredictor.domain.repository.ProfileRepository
+import com.abdulwaheed.smartelectricitypredictor.features.auth.state.AuthStage
 import com.abdulwaheed.smartelectricitypredictor.features.auth.state.AuthUiState
-import com.abdulwaheed.smartelectricitypredictor.navigation.NavDest
-import com.abdulwaheed.smartelectricitypredictor.util.AuthValidation
 import com.abdulwaheed.smartelectricitypredictor.util.FirebaseAuthErrorHandler
 import com.abdulwaheed.smartelectricitypredictor.util.FirestoreProfileErrorHandler
 import dagger.hilt.android.lifecycle.HiltViewModel
-import kotlinx.coroutines.flow.MutableSharedFlow
+import kotlinx.coroutines.Job
+import kotlinx.coroutines.ensureActive
 import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 import javax.inject.Inject
@@ -24,132 +21,83 @@ class AuthViewModel @Inject constructor(
     private val authRepository: AuthRepository,
     private val profileRepository: ProfileRepository
 ) : ViewModel() {
-    // Startup and authentication operations explicitly opt into loading as needed.
     private val _uiState = MutableStateFlow(AuthUiState())
     val uiState = _uiState.asStateFlow()
+    private var sessionJob: Job? = null
 
-    // make nav events replay the last emission so that a collector started slightly after an emit
-    // will still receive the navigation request (prevents lost events during startup race)
-    private val _navEvents = MutableSharedFlow<String>(replay = 1)
-    val navEvents = _navEvents.asSharedFlow()
+    init { checkSession() }
 
-    fun checkAuthAndNavigate() {
-        Log.d("AuthViewModel", "checkAuthAndNavigate: starting")
-        // ensure we show loading while checking
-        _uiState.value = AuthUiState(isLoading = true)
-        viewModelScope.launch {
-            try {
-                val user = authRepository.getCurrentUser()
-                if (user != null) {
-                    Log.d("AuthViewModel", "checkAuthAndNavigate: user found=${user.email}")
-                    routeAuthenticatedUser(user)
-                } else {
-                    Log.d("AuthViewModel", "checkAuthAndNavigate: no user")
-                    _uiState.value = AuthUiState(isLoading = false, user = null)
-                    _navEvents.emit(NavDest.Login.route)
-                }
-            } catch (e: Exception) {
-                Log.e("AuthViewModel", "checkAuthAndNavigate failed", e)
-                _uiState.value = AuthUiState(
-                    isLoading = false,
-                    errorMessage = "Unable to check your session. Please try again."
-                )
-                _navEvents.emit(NavDest.Login.route)
+    fun checkSession() {
+        sessionJob?.cancel()
+        _uiState.value = AuthUiState()
+        sessionJob = viewModelScope.launch {
+            val user = authRepository.getCurrentUser()
+            if (user == null) {
+                _uiState.value = AuthUiState(stage = AuthStage.SIGNED_OUT)
+                return@launch
             }
+            _uiState.value = _uiState.value.copy(user = user)
+            val result = profileRepository.getProfile(user.uid)
+            ensureActive()
+            result.fold(
+                onSuccess = { profile ->
+                    _uiState.value = AuthUiState(
+                        stage = if (profile == null) AuthStage.NEEDS_PROFILE else AuthStage.READY,
+                        user = user
+                    )
+                },
+                onFailure = {
+                    _uiState.value = AuthUiState(
+                        stage = AuthStage.PROFILE_ERROR, user = user,
+                        errorMessage = FirestoreProfileErrorHandler.getErrorMessage(it)
+                    )
+                }
+            )
         }
     }
 
-    fun signInWithEmail(email: String, password: String) {
-        // Validate inputs before sending to Firebase
-        val (isValid, validationError) = AuthValidation.validateLoginInputs(email, password)
-        if (!isValid) {
-            _uiState.value = AuthUiState(isLoading = false, errorMessage = validationError)
-            return
-        }
-
-        viewModelScope.launch {
-            _uiState.value = AuthUiState(isLoading = true)
-            val res = authRepository.signInWithEmail(email.trim(), password)
-            res.fold(onSuccess = { user ->
-                routeAuthenticatedUser(user)
-            }, onFailure = { e ->
-                val userFriendlyError = FirebaseAuthErrorHandler.getErrorMessage(e)
-                _uiState.value = AuthUiState(isLoading = false, errorMessage = userFriendlyError)
-            })
-        }
-    }
-
-    fun onGoogleSignInStarted() {
+    fun onFirebaseUiSignInStarted(): Boolean {
+        if (_uiState.value.stage != AuthStage.SIGNED_OUT || _uiState.value.isLoading) return false
         _uiState.value = _uiState.value.copy(isLoading = true, errorMessage = null)
+        return true
     }
 
-    fun handleGoogleSignInResult(success: Boolean, error: Throwable?) {
+    fun handleFirebaseUiSignInResult(success: Boolean, error: Throwable?) {
         if (success) {
-            // FirebaseUI has already updated FirebaseAuth.currentUser.
-            checkAuthAndNavigate()
-            return
-        }
-
-        val message = if (error == null) {
-            "Google sign-in was cancelled."
+            checkSession()
         } else {
-            FirebaseAuthErrorHandler.getErrorMessage(error)
+            _uiState.value = AuthUiState(
+                stage = AuthStage.SIGNED_OUT,
+                errorMessage = error?.let(FirebaseAuthErrorHandler::getErrorMessage)
+                    ?: "Sign-in was cancelled."
+            )
         }
-        _uiState.value = AuthUiState(isLoading = false, errorMessage = message)
     }
 
-    fun signUpWithEmail(email: String, password: String) {
-        // Validate inputs before sending to Firebase
-        val (isValid, validationError) = AuthValidation.validateRegisterInputs(email, password)
-        if (!isValid) {
-            _uiState.value = AuthUiState(isLoading = false, errorMessage = validationError)
-            return
-        }
+    fun onProfileSaved() {
+        _uiState.value = _uiState.value.copy(stage = AuthStage.READY, errorMessage = null)
+    }
 
-        viewModelScope.launch {
-            _uiState.value = AuthUiState(isLoading = true)
-            val res = authRepository.signUpWithEmail(email.trim(), password)
-            res.fold(onSuccess = { user ->
-                routeAuthenticatedUser(user)
-            }, onFailure = { e ->
-                val userFriendlyError = FirebaseAuthErrorHandler.getErrorMessage(e)
-                _uiState.value = AuthUiState(isLoading = false, errorMessage = userFriendlyError)
-            })
-        }
+    fun onProfileDeleted() {
+        _uiState.value = _uiState.value.copy(stage = AuthStage.NEEDS_PROFILE, errorMessage = null)
     }
 
     fun signOut() {
-        viewModelScope.launch {
-            _uiState.value = AuthUiState(isLoading = true)
-            val res = authRepository.signOut()
-            res.fold(onSuccess = {
-                _uiState.value = AuthUiState(isLoading = false, user = null)
-                _navEvents.emit(NavDest.Login.route)
-            }, onFailure = { e ->
-                val userFriendlyError = FirebaseAuthErrorHandler.getErrorMessage(e)
-                _uiState.value = AuthUiState(isLoading = false, errorMessage = userFriendlyError)
-            })
+        if (_uiState.value.isLoading) return
+        sessionJob?.cancel()
+        _uiState.value = _uiState.value.copy(isLoading = true)
+        sessionJob = viewModelScope.launch {
+            val result = authRepository.signOut()
+            ensureActive()
+            result.fold(
+                onSuccess = { _uiState.value = AuthUiState(stage = AuthStage.SIGNED_OUT) },
+                onFailure = {
+                    _uiState.value = _uiState.value.copy(
+                        isLoading = false,
+                        errorMessage = FirebaseAuthErrorHandler.getErrorMessage(it)
+                    )
+                }
+            )
         }
     }
-
-    private suspend fun routeAuthenticatedUser(user: User) {
-        _uiState.value = AuthUiState(isLoading = true, user = user)
-        profileRepository.getProfile(user.uid).fold(
-            onSuccess = { profile ->
-                _uiState.value = AuthUiState(isLoading = false, user = user)
-                _navEvents.emit(
-                    if (profile == null) NavDest.ProfileSetup.route else NavDest.Home.route
-                )
-            },
-            onFailure = { exception ->
-                Log.e("AuthViewModel", "Profile check failed", exception)
-                _uiState.value = AuthUiState(
-                    isLoading = false,
-                    user = user,
-                    errorMessage = FirestoreProfileErrorHandler.getErrorMessage(exception)
-                )
-            }
-        )
-    }
 }
-

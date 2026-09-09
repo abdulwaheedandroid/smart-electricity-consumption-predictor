@@ -6,12 +6,12 @@ import com.abdulwaheed.smartelectricitypredictor.domain.model.UserProfile
 import com.abdulwaheed.smartelectricitypredictor.domain.repository.AuthRepository
 import com.abdulwaheed.smartelectricitypredictor.domain.repository.ProfileRepository
 import com.abdulwaheed.smartelectricitypredictor.features.profile.state.ProfileUiState
+import com.abdulwaheed.smartelectricitypredictor.features.profile.state.ProfileFieldErrors
 import com.abdulwaheed.smartelectricitypredictor.util.FirestoreProfileErrorHandler
 import com.abdulwaheed.smartelectricitypredictor.util.ProfileValidation
 import dagger.hilt.android.lifecycle.HiltViewModel
-import kotlinx.coroutines.flow.MutableSharedFlow
+import com.abdulwaheed.smartelectricitypredictor.features.profile.state.ProfileCompletion
 import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 import javax.inject.Inject
@@ -24,17 +24,16 @@ class ProfileViewModel @Inject constructor(
     private val _uiState = MutableStateFlow(ProfileUiState())
     val uiState = _uiState.asStateFlow()
 
-    private val _profileSaved = MutableSharedFlow<Unit>(extraBufferCapacity = 1)
-    val profileSaved = _profileSaved.asSharedFlow()
-
-    private val _profileDeleted = MutableSharedFlow<Unit>(extraBufferCapacity = 1)
-    val profileDeleted = _profileDeleted.asSharedFlow()
+    fun consumeCompletion() {
+        _uiState.value = _uiState.value.copy(completion = null)
+    }
 
     init {
         loadProfile()
     }
 
     fun loadProfile() {
+        if (_uiState.value.isSaving || _uiState.value.isDeleting) return
         val currentUser = authRepository.getCurrentUser()
         if (currentUser == null) {
             _uiState.value = ProfileUiState(
@@ -63,6 +62,7 @@ class ProfileViewModel @Inject constructor(
                         gender = profile?.gender.orEmpty(),
                         cellNumber = profile?.cellNumber.orEmpty(),
                         profileExists = profile != null,
+                        hasLoaded = true,
                         isLoading = false,
                         errorMessage = null
                     )
@@ -78,6 +78,7 @@ class ProfileViewModel @Inject constructor(
     }
 
     fun onFullNameChanged(value: String) {
+        if (!canEdit()) return
         _uiState.value = _uiState.value.copy(
             fullName = value,
             fieldErrors = _uiState.value.fieldErrors.copy(fullName = null),
@@ -86,6 +87,7 @@ class ProfileViewModel @Inject constructor(
     }
 
     fun onAgeChanged(value: String) {
+        if (!canEdit()) return
         if (!value.all(Char::isDigit)) return
         _uiState.value = _uiState.value.copy(
             age = value,
@@ -95,6 +97,7 @@ class ProfileViewModel @Inject constructor(
     }
 
     fun onGenderChanged(value: String) {
+        if (!canEdit()) return
         _uiState.value = _uiState.value.copy(
             gender = value,
             fieldErrors = _uiState.value.fieldErrors.copy(gender = null),
@@ -103,6 +106,7 @@ class ProfileViewModel @Inject constructor(
     }
 
     fun onCellNumberChanged(value: String) {
+        if (!canEdit()) return
         _uiState.value = _uiState.value.copy(
             cellNumber = value,
             fieldErrors = _uiState.value.fieldErrors.copy(cellNumber = null),
@@ -112,7 +116,7 @@ class ProfileViewModel @Inject constructor(
 
     fun saveProfile() {
         val state = _uiState.value
-        if (state.isLoading || state.isSaving || state.isDeleting) return
+        if (!canEdit()) return
         if (state.uid.isBlank() || state.email.isBlank()) {
             _uiState.value = state.copy(
                 errorMessage = "Your account information is unavailable. Please sign in again."
@@ -145,9 +149,9 @@ class ProfileViewModel @Inject constructor(
                 onSuccess = {
                     _uiState.value = _uiState.value.copy(
                         isSaving = false,
-                        profileExists = true
+                        profileExists = true,
+                        completion = ProfileCompletion.SAVED
                     )
-                    _profileSaved.emit(Unit)
                 },
                 onFailure = { exception ->
                     _uiState.value = _uiState.value.copy(
@@ -161,7 +165,7 @@ class ProfileViewModel @Inject constructor(
 
     fun requestDeleteProfile() {
         val state = _uiState.value
-        if (!state.profileExists || state.isSaving || state.isDeleting) return
+        if (!state.profileExists || !canEdit()) return
         _uiState.value = state.copy(showDeleteConfirmation = true, errorMessage = null)
     }
 
@@ -172,7 +176,7 @@ class ProfileViewModel @Inject constructor(
 
     fun confirmDeleteProfile() {
         val state = _uiState.value
-        if (!state.profileExists || state.isSaving || state.isDeleting || state.uid.isBlank()) return
+        if (!state.profileExists || !canEdit() || !state.showDeleteConfirmation || state.uid.isBlank()) return
         _uiState.value = state.copy(
             isDeleting = true,
             showDeleteConfirmation = false,
@@ -183,9 +187,14 @@ class ProfileViewModel @Inject constructor(
                 onSuccess = {
                     _uiState.value = _uiState.value.copy(
                         isDeleting = false,
-                        profileExists = false
+                        profileExists = false,
+                        fullName = "",
+                        age = "",
+                        gender = "",
+                        cellNumber = "",
+                        fieldErrors = ProfileFieldErrors(),
+                        completion = ProfileCompletion.DELETED
                     )
-                    _profileDeleted.emit(Unit)
                 },
                 onFailure = { exception ->
                     _uiState.value = _uiState.value.copy(
@@ -195,5 +204,8 @@ class ProfileViewModel @Inject constructor(
                 }
             )
         }
+    }
+    private fun canEdit(): Boolean = _uiState.value.let {
+        it.hasLoaded && !it.isLoading && !it.isSaving && !it.isDeleting
     }
 }

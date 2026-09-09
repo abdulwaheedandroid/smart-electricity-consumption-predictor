@@ -17,6 +17,8 @@ fun HomeScreen(
     onViewProfile: () -> Unit,
     onViewAppliances: () -> Unit,
     onSignOut: () -> Unit,
+    isSigningOut: Boolean = false,
+    signOutError: String? = null,
     modifier: Modifier = Modifier
 ) {
     Column(
@@ -39,21 +41,25 @@ fun HomeScreen(
         )
         Button(
             onClick = onViewAppliances,
+            enabled = !isSigningOut,
             modifier = Modifier.fillMaxWidth()
         ) {
             Text("My appliances")
         }
         Button(
             onClick = onViewProfile,
+            enabled = !isSigningOut,
             modifier = Modifier.fillMaxWidth()
         ) {
             Text("View profile")
         }
+        signOutError?.let { Text(it, color = MaterialTheme.colorScheme.error) }
         Button(
             onClick = onSignOut,
+            enabled = !isSigningOut,
             modifier = Modifier.fillMaxWidth()
         ) {
-            Text("Sign out")
+            Text(if (isSigningOut) "Signing out..." else "Sign out")
         }
     }
 }

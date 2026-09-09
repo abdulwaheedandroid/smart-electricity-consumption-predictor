@@ -6,6 +6,8 @@ import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.activity.result.contract.ActivityResultContracts
+import androidx.lifecycle.ViewModelProvider
+import com.abdulwaheed.smartelectricitypredictor.features.auth.AuthViewModel
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
@@ -18,7 +20,9 @@ import dagger.hilt.android.AndroidEntryPoint
 
 @AndroidEntryPoint
 class MainActivity : ComponentActivity() {
-    private var firebaseSignInResultHandler: ((Boolean, Throwable?) -> Unit)? = null
+    private val authViewModel: AuthViewModel by lazy {
+        ViewModelProvider(this)[AuthViewModel::class.java]
+    }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -26,16 +30,16 @@ class MainActivity : ComponentActivity() {
         val firebaseLauncher =
             registerForActivityResult(ActivityResultContracts.StartActivityForResult()) { result ->
                 val response = IdpResponse.fromResultIntent(result.data)
-                val handler = firebaseSignInResultHandler
-                firebaseSignInResultHandler = null
-                handler?.invoke(result.resultCode == Activity.RESULT_OK, response?.error)
+                authViewModel.handleFirebaseUiSignInResult(
+                    result.resultCode == Activity.RESULT_OK, response?.error
+                )
             }
         enableEdgeToEdge()
         setContent {
             SmartElectricityPredictorTheme {
                 // Host the app navigation; pass a lambda to start FirebaseUI sign-in flow
-                AppNavHost(startFirebaseSignIn = { onResult ->
-                    firebaseSignInResultHandler = onResult
+                AppNavHost(authViewModel = authViewModel, startFirebaseSignIn = {
+                    if (!authViewModel.onFirebaseUiSignInStarted()) return@AppNavHost
                     val providers = arrayListOf(
                         AuthUI.IdpConfig.EmailBuilder().build(),
                         AuthUI.IdpConfig.GoogleBuilder().build()
@@ -46,7 +50,11 @@ class MainActivity : ComponentActivity() {
                         .setCredentialManagerEnabled(false)
                         .setTheme(R.style.Theme_FirebaseUI)
                         .build()
-                    firebaseLauncher.launch(signInIntent)
+                    try {
+                        firebaseLauncher.launch(signInIntent)
+                    } catch (exception: Exception) {
+                        authViewModel.handleFirebaseUiSignInResult(false, exception)
+                    }
                 })
             }
         }

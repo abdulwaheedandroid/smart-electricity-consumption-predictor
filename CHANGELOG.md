@@ -5,6 +5,25 @@ The project follows [Semantic Versioning](https://semver.org/).
 
 ## [Unreleased]
 
+### Authentication and navigation
+
+- Use a FirebaseUI Email/Google login landing screen; remove the obsolete custom email forms.
+- Deliver FirebaseUI results to an Activity-scoped auth ViewModel and route from session state,
+  without replayed navigation events or temporary Activity callbacks.
+- Check profiles after authentication and app restart: existing profiles open Home, missing
+  profiles open setup, and failed reads offer Retry / Sign out without enabling profile creation.
+- Return profile edits to the existing Home entry. Profile deletion clears the protected stack
+  and deleted form fields while retaining the Firebase Authentication account.
+- Clear the authenticated stack on sign-out and expose progress/errors on Home and profile screens.
+- Reuse prototype FirebaseUI light/dark, button, password/recovery, and inset styling.
+- Add auth/profile state tests, routing-policy tests, and device back-stack tests.
+- Preserve Home, Appliance Management, and the existing Firestore schema.
+
+Device regression checklist: Email/Google success and cancellation, rotation while FirebaseUI
+is open, password recovery, light/dark and keyboard/inset rendering, app restart with an existing
+or missing profile, failed profile reads and retry/sign-out, profile create/edit/delete, Back after
+deletion/logout, and Home-to-Appliances navigation. Device tests require a connected emulator/device.
+
 ### Architecture
 
 - Migrated dependency injection to Hilt and removed the ServiceLocator.

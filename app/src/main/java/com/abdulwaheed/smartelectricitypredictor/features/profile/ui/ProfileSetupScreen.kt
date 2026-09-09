@@ -5,6 +5,7 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.systemBarsPadding
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
@@ -15,6 +16,7 @@ import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.ExposedDropdownMenuBox
 import androidx.compose.material3.ExposedDropdownMenuDefaults
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
@@ -42,8 +44,21 @@ fun ProfileSetupScreen(
     onRequestDelete: () -> Unit,
     onConfirmDelete: () -> Unit,
     onCancelDelete: () -> Unit,
+    onSignOut: () -> Unit,
+    isSigningOut: Boolean = false,
+    signOutError: String? = null,
     modifier: Modifier = Modifier
 ) {
+    if (!state.isLoading && !state.hasLoaded) {
+        com.abdulwaheed.smartelectricitypredictor.features.auth.ui.SplashScreen(
+            errorMessage = signOutError ?: state.errorMessage ?: "Unable to load your profile.",
+            onRetry = onRetry,
+            onSignOut = onSignOut,
+            isSigningOut = isSigningOut,
+            modifier = modifier
+        )
+        return
+    }
     if (state.isLoading) {
         Column(
             modifier = modifier.fillMaxSize(),
@@ -51,7 +66,12 @@ fun ProfileSetupScreen(
             verticalArrangement = Arrangement.Center
         ) {
             CircularProgressIndicator()
-            Text("Loading profile...", modifier = Modifier.padding(top = 12.dp))
+            Text(
+                text = "Loading profile...",
+                style = MaterialTheme.typography.bodyMedium,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                modifier = Modifier.padding(top = 12.dp)
+            )
         }
         return
     }
@@ -60,21 +80,28 @@ fun ProfileSetupScreen(
         modifier = modifier
             .fillMaxSize()
             .verticalScroll(rememberScrollState())
-            .padding(16.dp),
+            .systemBarsPadding()
+            .padding(horizontal = 24.dp, vertical = 16.dp),
         verticalArrangement = Arrangement.spacedBy(12.dp)
     ) {
-        Text(if (state.profileExists) "Your profile" else "Complete your profile")
         Text(
-            if (state.profileExists) "Review or update your profile information."
-            else "Enter your profile information before continuing."
+            text = if (state.profileExists) "Your profile" else "Complete your profile",
+            style = MaterialTheme.typography.headlineSmall,
+            color = MaterialTheme.colorScheme.onSurface
+        )
+        Text(
+            text = if (state.profileExists) "Review or update your profile information."
+            else "Enter your profile information before continuing.",
+            style = MaterialTheme.typography.bodyLarge,
+            color = MaterialTheme.colorScheme.onSurfaceVariant
         )
 
-        ReadOnlyProfileField("Email", state.email, state)
+        ReadOnlyProfileField("Email", state.email, state, isSigningOut)
         OutlinedTextField(
             value = state.fullName,
             onValueChange = onFullNameChanged,
             label = { Text("Full name") },
-            enabled = !state.isSaving && !state.isDeleting,
+            enabled = !state.isSaving && !state.isDeleting && !isSigningOut,
             isError = state.fieldErrors.fullName != null,
             supportingText = { state.fieldErrors.fullName?.let { Text(it) } },
             singleLine = true,
@@ -84,7 +111,7 @@ fun ProfileSetupScreen(
             value = state.age,
             onValueChange = onAgeChanged,
             label = { Text("Age") },
-            enabled = !state.isSaving && !state.isDeleting,
+            enabled = !state.isSaving && !state.isDeleting && !isSigningOut,
             isError = state.fieldErrors.age != null,
             supportingText = { state.fieldErrors.age?.let { Text(it) } },
             keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
@@ -94,14 +121,14 @@ fun ProfileSetupScreen(
         GenderDropdown(
             value = state.gender,
             onValueChanged = onGenderChanged,
-            enabled = !state.isSaving && !state.isDeleting,
+            enabled = !state.isSaving && !state.isDeleting && !isSigningOut,
             errorMessage = state.fieldErrors.gender
         )
         OutlinedTextField(
             value = state.cellNumber,
             onValueChange = onCellNumberChanged,
             label = { Text("Cell number") },
-            enabled = !state.isSaving && !state.isDeleting,
+            enabled = !state.isSaving && !state.isDeleting && !isSigningOut,
             isError = state.fieldErrors.cellNumber != null,
             supportingText = { state.fieldErrors.cellNumber?.let { Text(it) } },
             keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Phone),
@@ -110,14 +137,23 @@ fun ProfileSetupScreen(
         )
 
         state.errorMessage?.let { message ->
-            Text(message)
-            Button(onClick = onRetry, enabled = !state.isSaving && !state.isDeleting) {
+            Text(
+                text = message,
+                style = MaterialTheme.typography.bodyMedium,
+                color = MaterialTheme.colorScheme.error
+            )
+            Button(
+                onClick = onRetry,
+                enabled = !state.isSaving && !state.isDeleting && !isSigningOut,
+                modifier = Modifier.fillMaxWidth()
+            ) {
                 Text("Retry")
             }
         }
+        signOutError?.let { Text(it, color = MaterialTheme.colorScheme.error) }
         Button(
             onClick = onSave,
-            enabled = !state.isSaving && !state.isDeleting && state.errorMessage == null,
+            enabled = !state.isSaving && !state.isDeleting && !isSigningOut && state.errorMessage == null,
             modifier = Modifier.fillMaxWidth()
         ) {
             if (state.isSaving) CircularProgressIndicator()
@@ -126,11 +162,18 @@ fun ProfileSetupScreen(
         if (state.profileExists) {
             Button(
                 onClick = onRequestDelete,
-                enabled = !state.isSaving && !state.isDeleting,
+                enabled = !state.isSaving && !state.isDeleting && !isSigningOut,
                 modifier = Modifier.fillMaxWidth()
             ) {
                 if (state.isDeleting) CircularProgressIndicator() else Text("Delete profile")
             }
+        }
+        Button(
+            onClick = onSignOut,
+            enabled = !state.isSaving && !state.isDeleting && !isSigningOut,
+            modifier = Modifier.fillMaxWidth()
+        ) {
+            Text(if (isSigningOut) "Signing out..." else "Sign out")
         }
     }
 
@@ -201,13 +244,13 @@ private fun GenderDropdown(
 }
 
 @Composable
-private fun ReadOnlyProfileField(label: String, value: String, state: ProfileUiState) {
+private fun ReadOnlyProfileField(label: String, value: String, state: ProfileUiState, isSigningOut: Boolean) {
     OutlinedTextField(
         value = value,
         onValueChange = {},
         label = { Text(label) },
         readOnly = true,
-        enabled = !state.isSaving && !state.isDeleting,
+        enabled = !state.isSaving && !state.isDeleting && !isSigningOut,
         modifier = Modifier.fillMaxWidth()
     )
 }

@@ -10,7 +10,11 @@ data class ProfileFieldErrors(
         get() = fullName != null || age != null || gender != null || cellNumber != null
 }
 
+enum class ProfileCompletion { SAVED, DELETED }
+
 data class ProfileUiState(
+    val hasLoaded: Boolean = false,
+    val completion: ProfileCompletion? = null,
     val uid: String = "",
     val fullName: String = "",
     val email: String = "",
