@@ -18,3 +18,7 @@ app/google-services.json
 .idea/firebender/
 
 .kotlin/
+
+# Local submission signing files
+keystore.properties
+submission-debug.jks
