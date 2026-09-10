@@ -162,6 +162,10 @@ Tasks
 
 # Definition of Done
 
+Manual emulator/device testing is mandatory for every feature and the final end-to-end flow.
+Automated test infrastructure is outside the required deliverables. The supported app and
+FirebaseUI appearance is light mode only, including on devices configured for dark mode.
+
 A feature is considered complete only when
 
 - Implementation finished
@@ -175,8 +179,6 @@ A feature is considered complete only when
 
 # Future Improvements
 
-- Unit Testing
-- UI Testing
 - Offline Cache
 - WorkManager
 - CI/CD

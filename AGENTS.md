@@ -192,6 +192,18 @@ Never expose raw Firebase exceptions to users.
 
 # Build Requirements
 
+Project scope policy:
+
+- Automated unit and instrumentation tests are not required deliverables. Do not add
+  automated test code or test-only infrastructure.
+- Preserve all production validation and error handling.
+- Every feature must be manually tested on an emulator or physical Android device before
+  it is considered complete. Cover successful flows, validation failures, error states,
+  navigation/back-stack behavior, restart/persistence, authentication/session behavior,
+  CRUD, offline behavior where required, and the final end-to-end flow.
+- Support light mode only, including FirebaseUI when the device uses dark mode.
+- Run `./gradlew assembleDebug` for build verification.
+
 Every implementation must
 
 - Build successfully

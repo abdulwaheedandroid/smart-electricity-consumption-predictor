@@ -407,13 +407,13 @@ Alternatively, run:
 #### Windows
 
 ```bash
-gradlew.bat build
+gradlew.bat assembleDebug
 ```
 
 #### macOS or Linux
 
 ```bash
-./gradlew build
+./gradlew assembleDebug
 ```
 
 ---
@@ -457,6 +457,13 @@ Important principles include:
 
 ## Definition of Done
 
+Automated unit/instrumentation tests are outside the required project deliverables.
+Production validation and error handling remain mandatory. Every feature must be manually
+tested on an emulator or physical device, including success, invalid input, errors,
+navigation/back stack, sessions, restart/persistence, CRUD, offline behavior where required,
+and the final end-to-end flow. A successful build alone does not complete runtime verification.
+The app and FirebaseUI support light mode only, including on dark-mode devices.
+
 A feature is complete only when:
 
 - Implementation is finished
@@ -499,7 +506,7 @@ Documentation should be updated whenever:
 5. Build the Prediction Engine
 6. Add Reports and Analytics
 7. Complete Settings
-8. Expand automated testing
+8. Complete manual emulator/device regression testing
 9. Add screenshots and diagrams
 10. Prepare the final university submission
 
@@ -509,8 +516,6 @@ Documentation should be updated whenever:
 
 Potential improvements after the core application is complete:
 
-- Unit testing
-- Compose UI testing
 - Offline caching
 - WorkManager
 - Firebase Crashlytics
@@ -518,7 +523,6 @@ Potential improvements after the core application is complete:
 - CI/CD
 - Accessibility improvements
 - Localization
-- Dark theme
 - Exportable reports
 
 These enhancements are intentionally postponed until the core functionality is stable.

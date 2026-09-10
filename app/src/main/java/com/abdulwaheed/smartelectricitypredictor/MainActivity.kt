@@ -1,10 +1,12 @@
 package com.abdulwaheed.smartelectricitypredictor
 
 import android.app.Activity
+import android.graphics.Color
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
+import androidx.activity.SystemBarStyle
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.lifecycle.ViewModelProvider
 import com.abdulwaheed.smartelectricitypredictor.features.auth.AuthViewModel
@@ -34,7 +36,8 @@ class MainActivity : ComponentActivity() {
                     result.resultCode == Activity.RESULT_OK, response?.error
                 )
             }
-        enableEdgeToEdge()
+        val lightSystemBars = SystemBarStyle.light(Color.TRANSPARENT, Color.BLACK)
+        enableEdgeToEdge(statusBarStyle = lightSystemBars, navigationBarStyle = lightSystemBars)
         setContent {
             SmartElectricityPredictorTheme {
                 // Host the app navigation; pass a lambda to start FirebaseUI sign-in flow
