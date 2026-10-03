@@ -24,11 +24,12 @@ class ApplianceViewModel @Inject constructor(
     val uiState = _uiState.asStateFlow()
 
     init {
-        loadAppliances()
+        initializeAppliances()
     }
 
-    fun loadAppliances() {
+    private fun initializeAppliances() {
         val uid = authRepository.getCurrentUser()?.uid
+
         if (uid == null) {
             _uiState.value = ApplianceUiState(
                 isLoading = false,
@@ -37,24 +38,132 @@ class ApplianceViewModel @Inject constructor(
             return
         }
 
-        _uiState.value = _uiState.value.copy(isLoading = true, errorMessage = null)
+        observeAppliances(uid)
+        syncAppliances(uid)
+    }
+
+    private fun syncAppliances(
+        uid: String
+    ) {
         viewModelScope.launch {
-            applianceRepository.getAppliances(uid).fold(
-                onSuccess = { appliances ->
+
+            applianceRepository
+                .syncAppliances(uid)
+                .fold(
+                    onSuccess = {
+                        _uiState.value = _uiState.value.copy(
+                            isLoading = false,
+                            errorMessage = null
+                        )
+                    },
+                    onFailure = { exception ->
+                        _uiState.value = _uiState.value.copy(
+                            isLoading = false,
+                            errorMessage =
+                                FirestoreApplianceErrorHandler
+                                    .getErrorMessage(exception)
+                        )
+                    }
+                )
+        }
+    }
+
+    private fun observeAppliances(
+        uid: String
+    ) {
+        viewModelScope.launch {
+
+            applianceRepository
+                .observeAppliances(uid)
+                .collect { appliances ->
+
                     _uiState.value = _uiState.value.copy(
                         appliances = appliances,
-                        isLoading = false,
-                        errorMessage = null
+                        isLoading =
+                            _uiState.value.isLoading && appliances.isEmpty()
+                    )
+                }
+        }
+    }
+
+    fun saveAppliance() {
+        val state = _uiState.value
+
+        if (state.isSaving || state.isDeleting) return
+
+        val uid = authRepository.getCurrentUser()?.uid
+
+        if (uid == null) {
+            _uiState.value = state.copy(
+                errorMessage = "Your session has expired. Please sign in again."
+            )
+            return
+        }
+
+        val errors = ApplianceValidation.validate(
+            state.name,
+            state.powerWatts,
+            state.dailyUsageHours
+        )
+
+        if (errors.hasErrors) {
+            _uiState.value = state.copy(
+                fieldErrors = errors
+            )
+            return
+        }
+
+        val appliance = Appliance(
+            id = state.editingApplianceId.orEmpty(),
+            name = state.name.trim(),
+            powerWatts = state.powerWatts.trim().toInt(),
+            dailyUsageHours = state.dailyUsageHours.trim().toDouble()
+        )
+
+        _uiState.value = state.copy(
+            isSaving = true,
+            errorMessage = null
+        )
+
+        viewModelScope.launch {
+            applianceRepository.saveAppliance(
+                uid = uid,
+                appliance = appliance
+            ).fold(
+                onSuccess = {
+                    _uiState.value = _uiState.value.copy(
+                        isSaving = false,
+                        showEditor = false
                     )
                 },
                 onFailure = { exception ->
                     _uiState.value = _uiState.value.copy(
-                        isLoading = false,
-                        errorMessage = FirestoreApplianceErrorHandler.getErrorMessage(exception)
+                        isSaving = false,
+                        errorMessage =
+                            FirestoreApplianceErrorHandler.getErrorMessage(exception)
                     )
                 }
             )
         }
+    }
+
+    fun retrySync() {
+        val uid = authRepository.getCurrentUser()?.uid
+
+        if (uid == null) {
+            _uiState.value = _uiState.value.copy(
+                errorMessage =
+                    "Your session has expired. Please sign in again."
+            )
+            return
+        }
+
+        _uiState.value = _uiState.value.copy(
+            isLoading = _uiState.value.appliances.isEmpty(),
+            errorMessage = null
+        )
+
+        syncAppliances(uid)
     }
 
     fun onSearchQueryChanged(value: String) {
@@ -96,42 +205,6 @@ class ApplianceViewModel @Inject constructor(
     fun onPowerWattsChanged(value: String) = updateForm { copy(powerWatts = value, fieldErrors = fieldErrors.copy(powerWatts = null)) }
     fun onDailyUsageHoursChanged(value: String) = updateForm { copy(dailyUsageHours = value, fieldErrors = fieldErrors.copy(dailyUsageHours = null)) }
 
-    fun saveAppliance() {
-        val state = _uiState.value
-        if (state.isSaving || state.isDeleting) return
-        val uid = authRepository.getCurrentUser()?.uid
-        if (uid == null) {
-            _uiState.value = state.copy(errorMessage = "Your session has expired. Please sign in again.")
-            return
-        }
-        val errors = ApplianceValidation.validate(state.name, state.powerWatts, state.dailyUsageHours)
-        if (errors.hasErrors) {
-            _uiState.value = state.copy(fieldErrors = errors)
-            return
-        }
-        val appliance = Appliance(
-            id = state.editingApplianceId.orEmpty(),
-            name = state.name.trim(),
-            powerWatts = state.powerWatts.trim().toInt(),
-            dailyUsageHours = state.dailyUsageHours.trim().toDouble()
-        )
-        _uiState.value = state.copy(isSaving = true, errorMessage = null)
-        viewModelScope.launch {
-            applianceRepository.saveAppliance(uid, appliance).fold(
-                onSuccess = {
-                    _uiState.value = _uiState.value.copy(isSaving = false, showEditor = false)
-                    loadAppliances()
-                },
-                onFailure = { exception ->
-                    _uiState.value = _uiState.value.copy(
-                        isSaving = false,
-                        errorMessage = FirestoreApplianceErrorHandler.getErrorMessage(exception)
-                    )
-                }
-            )
-        }
-    }
-
     fun requestDeleteAppliance(appliance: Appliance) {
         if (_uiState.value.isSaving || _uiState.value.isDeleting) return
         _uiState.value = _uiState.value.copy(appliancePendingDeletion = appliance, errorMessage = null)
@@ -158,7 +231,6 @@ class ApplianceViewModel @Inject constructor(
             applianceRepository.deleteAppliance(uid, appliance.id).fold(
                 onSuccess = {
                     _uiState.value = _uiState.value.copy(isDeleting = false)
-                    loadAppliances()
                 },
                 onFailure = { exception ->
                     _uiState.value = _uiState.value.copy(

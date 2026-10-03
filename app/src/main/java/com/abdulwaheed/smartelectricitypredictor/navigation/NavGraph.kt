@@ -12,12 +12,12 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
+import com.abdulwaheed.smartelectricitypredictor.features.appliance.ApplianceViewModel
+import com.abdulwaheed.smartelectricitypredictor.features.appliance.ui.ApplianceScreen
 import com.abdulwaheed.smartelectricitypredictor.features.auth.AuthViewModel
 import com.abdulwaheed.smartelectricitypredictor.features.auth.state.AuthStage
 import com.abdulwaheed.smartelectricitypredictor.features.auth.ui.LoginScreen
 import com.abdulwaheed.smartelectricitypredictor.features.auth.ui.SplashScreen
-import com.abdulwaheed.smartelectricitypredictor.features.appliance.ApplianceViewModel
-import com.abdulwaheed.smartelectricitypredictor.features.appliance.ui.ApplianceScreen
 import com.abdulwaheed.smartelectricitypredictor.features.home.ui.HomeScreen
 import com.abdulwaheed.smartelectricitypredictor.features.profile.ProfileViewModel
 import com.abdulwaheed.smartelectricitypredictor.features.profile.state.ProfileCompletion
@@ -130,7 +130,7 @@ fun AppNavHost(
                     onDismissEditor = vm::dismissEditor,
                     onConfirmDelete = vm::confirmDeleteAppliance,
                     onCancelDelete = vm::cancelDeleteAppliance,
-                    onRetry = vm::loadAppliances
+                    onRetry = vm::retrySync
                 )
             }
         }
