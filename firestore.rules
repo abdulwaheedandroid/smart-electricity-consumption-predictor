@@ -46,6 +46,51 @@ service cloud.firestore {
         && hasValidProfileFields()
         && request.resource.data.createdAt == resource.data.createdAt;
 
+      match /historicalConsumption/{recordId} {
+        function hasValidConsumptionFields() {
+          let data = request.resource.data;
+          let yearText = data.year < 10 ? '000' + string(data.year)
+            : data.year < 100 ? '00' + string(data.year)
+            : data.year < 1000 ? '0' + string(data.year)
+            : string(data.year);
+          let monthText = data.month < 10 ? '0' + string(data.month)
+            : string(data.month);
+          return data.keys().hasOnly([
+            'month', 'year', 'unitsConsumed', 'billAmount',
+            'createdAt', 'updatedAt', 'isDeleted'
+          ])
+          && data.keys().hasAll([
+            'month', 'year', 'unitsConsumed', 'billAmount',
+            'createdAt', 'updatedAt', 'isDeleted'
+          ])
+          && data.month is int && data.month >= 1 && data.month <= 12
+          && data.year is int && data.year >= 1 && data.year <= 9999
+          && recordId == yearText + '-' + monthText
+          && (data.year < request.time.year()
+            || (data.year == request.time.year()
+              && data.month <= request.time.month()))
+          && data.unitsConsumed is number && data.unitsConsumed >= 0
+          // Infinity minus itself produces NaN; finite values produce zero.
+          && !math.isNaN(data.unitsConsumed - data.unitsConsumed)
+          && data.billAmount is number && data.billAmount >= 0
+          && !math.isNaN(data.billAmount - data.billAmount)
+          // The repository writes device timestamps as integer milliseconds.
+          && data.createdAt is int && data.createdAt > 0
+          && data.updatedAt is int && data.updatedAt >= data.createdAt
+          && data.isDeleted is bool;
+        }
+
+        allow read: if isOwner();
+        allow create: if isOwner() && hasValidConsumptionFields();
+        allow update: if isOwner() && hasValidConsumptionFields()
+          && request.resource.data.month == resource.data.month
+          && request.resource.data.year == resource.data.year
+          && request.resource.data.createdAt == resource.data.createdAt
+          && request.resource.data.updatedAt >= resource.data.updatedAt;
+        // Deletes synchronize as isDeleted=true, retaining the remote tombstone.
+        allow delete: if false;
+      }
+
       match /appliances/{applianceId} {
         function hasValidApplianceFields() {
           return request.resource.data.keys().hasOnly([

@@ -1,10 +1,12 @@
 package com.abdulwaheed.smartelectricitypredictor.di
 
-import com.abdulwaheed.smartelectricitypredictor.data.repository.AuthRepositoryImpl
 import com.abdulwaheed.smartelectricitypredictor.data.repository.ApplianceRepositoryImpl
+import com.abdulwaheed.smartelectricitypredictor.data.repository.AuthRepositoryImpl
+import com.abdulwaheed.smartelectricitypredictor.data.repository.HistoricalConsumptionRepositoryImpl
 import com.abdulwaheed.smartelectricitypredictor.data.repository.ProfileRepositoryImpl
 import com.abdulwaheed.smartelectricitypredictor.domain.repository.ApplianceRepository
 import com.abdulwaheed.smartelectricitypredictor.domain.repository.AuthRepository
+import com.abdulwaheed.smartelectricitypredictor.domain.repository.HistoricalConsumptionRepository
 import com.abdulwaheed.smartelectricitypredictor.domain.repository.ProfileRepository
 import dagger.Binds
 import dagger.Module
@@ -26,4 +28,12 @@ abstract class RepositoryModule {
     @Binds
     @Singleton
     abstract fun bindProfileRepository(implementation: ProfileRepositoryImpl): ProfileRepository
+
+    @Binds
+    @Singleton
+    abstract fun bindHistoricalConsumptionRepository(
+        implementation: HistoricalConsumptionRepositoryImpl
+    ): HistoricalConsumptionRepository
+
+
 }
